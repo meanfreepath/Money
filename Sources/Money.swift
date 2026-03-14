@@ -280,10 +280,46 @@ extension _Money: Comparable {
     }
 }
 
-// MARK: - Unary Negation
+// MARK: - SignedNumeric
 
-public prefix func -<C: CurrencyType>(value: _Money<C>) -> _Money<C> {
-    return value.negative
+extension _Money: AdditiveArithmetic {
+    public static var zero: _Money {
+        return _Money()
+    }
+
+    public static func +(lhs: _Money, rhs: _Money) -> _Money {
+        return lhs.adding(rhs)
+    }
+
+    public static func -(lhs: _Money, rhs: _Money) -> _Money {
+        return lhs.subtracting(rhs)
+    }
+}
+
+extension _Money: Numeric {
+    public typealias Magnitude = _Money
+
+    public var magnitude: _Money {
+        return isNegative ? negative : self
+    }
+
+    public init?<T: BinaryInteger>(exactly source: T) {
+        self.init(integerLiteral: Int(source))
+    }
+
+    public static func *(lhs: _Money, rhs: _Money) -> _Money {
+        return lhs.multiplying(by: rhs)
+    }
+
+    public static func *=(lhs: inout _Money, rhs: _Money) {
+        lhs = lhs * rhs
+    }
+}
+
+extension _Money: SignedNumeric {
+    public mutating func negate() {
+        self = negative
+    }
 }
 
 // MARK: - CustomStringConvertible
