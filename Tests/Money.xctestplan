@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "4F1C8DC8-EBCB-487D-B759-30D523B0335E",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "MoneyTests",
+        "name" : "MoneyTests"
+      }
+    }
+  ],
+  "version" : 1
+}

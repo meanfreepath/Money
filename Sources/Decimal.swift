@@ -25,7 +25,6 @@
 // SOFTWARE.
 
 import Foundation
-import ValueCoding
 
 /**
  # Decimal
@@ -70,30 +69,18 @@ public typealias PlainDecimal = _Decimal<DecimalNumberBehavior.Plain>
 /// `BankersDecimal` with banking decimal number behavior
 public typealias BankersDecimal = _Decimal<DecimalNumberBehavior.Bankers>
 
-// MARK: - Value Coding
+// MARK: - Codable
 
-extension _Decimal: ValueCoding {
-    public typealias Coder = _DecimalCoder<Behavior>
-}
-
-/**
- Coding class to support `_Decimal` `ValueCoding` conformance.
-*/
-public final class _DecimalCoder<Behavior: DecimalNumberBehaviorType>: NSObject, NSCoding, CodingProtocol {
-
-    public let value: _Decimal<Behavior>
-
-    public required init(_ v: _Decimal<Behavior>) {
-        value = v
+extension _Decimal: Codable {
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(storage.decimalValue)
     }
 
-    public init?(coder aDecoder: NSCoder) {
-        let storage = aDecoder.decodeObject(forKey: "storage") as! NSDecimalNumber
-        value = _Decimal<Behavior>(storage: storage)
-    }
-
-    public func encode(with aCoder: NSCoder) {
-        aCoder.encode(value.storage, forKey: "storage")
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let decimal = try container.decode(Decimal.self)
+        self.init(storage: NSDecimalNumber(decimal: decimal))
     }
 }
 

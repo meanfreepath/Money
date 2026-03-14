@@ -25,7 +25,6 @@
 // SOFTWARE.
 
 import Foundation
-import ValueCoding
 
 /**
  
@@ -34,7 +33,7 @@ import ValueCoding
  `MoneyType` is a protocol which refines `DecimalNumberType`. It
  adds a generic type for the currency.
 */
-public protocol MoneyType: DecimalNumberType, ValueCoding {
+public protocol MoneyType: DecimalNumberType, Codable {
     associatedtype Currency: CurrencyType
 
     /// Access the underlying decimal
@@ -267,16 +266,24 @@ public struct _Money<C: CurrencyType>: MoneyType {
     }
 }
 
-// MARK: - Equality
+// MARK: - Equatable & Comparable
 
-public func ==<C: CurrencyType>(lhs: _Money<C>, rhs: _Money<C>) -> Bool {
-    return lhs.decimal == rhs.decimal
+extension _Money: Equatable {
+    public static func ==(lhs: _Money, rhs: _Money) -> Bool {
+        return lhs.decimal == rhs.decimal
+    }
 }
 
-// MARK: - Comparable
+extension _Money: Comparable {
+    public static func <(lhs: _Money, rhs: _Money) -> Bool {
+        return lhs.decimal < rhs.decimal
+    }
+}
 
-public func <<C: CurrencyType>(lhs: _Money<C>, rhs: _Money<C>) -> Bool {
-    return lhs.decimal < rhs.decimal
+// MARK: - Unary Negation
+
+public prefix func -<C: CurrencyType>(value: _Money<C>) -> _Money<C> {
+    return value.negative
 }
 
 // MARK: - CustomStringConvertible
@@ -292,30 +299,21 @@ extension _Money: CustomStringConvertible {
     }
 }
 
-// MARK: - Value Coding
+// MARK: - Codable
 
-extension _Money: ValueCoding {
-    public typealias Coder = _MoneyCoder<C>
-}
-
-/**
- Coding class to support `_Decimal` `ValueCoding` conformance.
- */
-public final class _MoneyCoder<C: CurrencyType>: NSObject, NSCoding, CodingProtocol {
-
-    public let value: _Money<C>
-
-    public required init(_ v: _Money<C>) {
-        value = v
+extension _Money: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case decimal
     }
 
-    public init?(coder aDecoder: NSCoder) {
-        let decimal = _Decimal<C>.decode(aDecoder.decodeObject(forKey: "decimal") as AnyObject?)
-        value = _Money<C>(decimal!)
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(decimal, forKey: .decimal)
     }
 
-    public func encode(with aCoder: NSCoder) {
-        aCoder.encode(value.decimal.encoded, forKey: "decimal")
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        decimal = try container.decode(_Decimal<C>.self, forKey: .decimal)
     }
 }
 

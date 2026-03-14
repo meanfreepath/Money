@@ -28,7 +28,6 @@
 
 import Foundation
 import PassKit
-import ValueCoding
 
 // MARK: - Pay equivalent types
 
@@ -41,7 +40,7 @@ import ValueCoding
 
  - see: PKPaymentSummaryItemType
  */
-public enum PaymentSummaryItemType: Int {
+public enum PaymentSummaryItemType: Int, Codable {
     case final = 1, pending
 }
 
@@ -52,13 +51,9 @@ public enum PaymentSummaryItemType: Int {
  A value type to represent a payment line item. It is generic over the
  `MoneyType` of the item cost. Other properties are a label and type.
  
- The money type must use `NSDecimalNumber` storage type, and correctly 
- conform to `ValueCoding`.
+ The money type must use `NSDecimalNumber` storage type.
  */
-public struct PaymentSummaryItem<Cost: MoneyType>: Hashable, ValueCoding where Cost.DecimalStorageType == NSDecimalNumber, Cost.Coder: NSCoding, Cost.Coder.Value == Cost {
-
-    /// The ValueCoding Coder type
-    public typealias Coder = PaymentSummaryItemCoder<Cost>
+public struct PaymentSummaryItem<Cost: MoneyType>: Hashable, Codable where Cost.DecimalStorageType == NSDecimalNumber {
 
     /**
      A label for the item.
@@ -83,8 +78,8 @@ public struct PaymentSummaryItem<Cost: MoneyType>: Hashable, ValueCoding where C
         return cost.amount
     }
 
-    public var hashValue: Int {
-        return cost.hashValue ^ (label.hashValue ^ type.hashValue)
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(cost.hashValue ^ (label.hashValue ^ type.hashValue))
     }
 
     /**
@@ -142,30 +137,6 @@ extension PaymentSummaryItem {
     }
 }
 
-/**
- Coding adaptor for `PaymentSummaryItem`.
-*/
-public final class PaymentSummaryItemCoder<Cost: MoneyType>: NSObject, NSCoding, CodingProtocol where Cost.DecimalStorageType == NSDecimalNumber, Cost.Coder: NSCoding, Cost.Coder.Value == Cost {
-
-    public let value: PaymentSummaryItem<Cost>
-
-    public required init(_ v: PaymentSummaryItem<Cost>) {
-        value = v
-    }
-
-    public init?(coder aDecoder: NSCoder) {
-        let cost = Cost.decode(aDecoder.decodeObject(forKey: "cost") as AnyObject?)
-        let label = aDecoder.decodeObject(forKey: "label") as? String
-        let type = PaymentSummaryItemType(rawValue: aDecoder.decodeInteger(forKey: "type"))
-        value = PaymentSummaryItem(label: label!, cost: cost!, type: type!)
-    }
-
-    public func encode(with aCoder: NSCoder) {
-        aCoder.encode(value.label, forKey: "label")
-        aCoder.encode(value.cost.encoded, forKey: "cost")
-        aCoder.encode(value.type.rawValue, forKey: "type")
-    }
-}
 
 // MARK: - Pay type extensions
 
@@ -209,7 +180,7 @@ public extension PKPaymentRequest {
      - parameter sellerName: a `String` which is used in the total cost summary item.
      - returns: a `PKPaymentRequest` which has its payment summary items and currency code set.
     */
-    convenience init<Cost: MoneyType>(items: [PaymentSummaryItem<Cost>], sellerName: String) where Cost.DecimalStorageType == NSDecimalNumber, Cost.Coder: NSCoding, Cost.Coder.Value == Cost {
+    convenience init<Cost: MoneyType>(items: [PaymentSummaryItem<Cost>], sellerName: String) where Cost.DecimalStorageType == NSDecimalNumber {
         self.init()
         currencyCode = Cost.Currency.code
         var items = items

@@ -85,16 +85,10 @@ class PaymentSummaryItemTests: ApplePayTests {
 
 class PaymentSummaryItemCodingTests: ApplePayTests {
 
-    func archiveEncoded() -> Data {
-        return NSKeyedArchiver.archivedData(withRootObject: item.encoded)
-    }
-
-    func unarchive(_ archive: Data) -> PaymentSummaryItem<GBP>? {
-        return PaymentSummaryItem<GBP>.decode(NSKeyedUnarchiver.unarchiveObject(with: archive) as AnyObject?)
-    }
-
-    func test__encode_decode() {
-        XCTAssertEqual(unarchive(archiveEncoded()), item)
+    func test__encode_decode() throws {
+        let data = try JSONEncoder().encode(item)
+        let decoded = try JSONDecoder().decode(PaymentSummaryItem<GBP>.self, from: data)
+        XCTAssertEqual(decoded, item)
     }
 }
 

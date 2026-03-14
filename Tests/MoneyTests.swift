@@ -216,7 +216,7 @@ class MoneyMultiplicationTests: XCTestCase {
     }
 
     func test__multiplication_float_2() {
-        XCTAssertEqual(money * M_PI, 31.37)
+        XCTAssertEqual(money * .pi, 31.37)
     }
 }
 
@@ -252,7 +252,7 @@ class MoneyDivisionTests: XCTestCase {
     }
 
     func test__division_float_4() {
-        XCTAssertEqual(money / M_PI, 3.18)
+        XCTAssertEqual(money / .pi, 3.18)
     }
 }
 
@@ -298,13 +298,13 @@ class MoneyDescriptionTests: MoneyTestCase {
     func test__btc_formatted_with_style() {
         XCTAssertEqual(btc.currencyCode, "BTC")
         let formatted = btc.formatted(withStyle: .currency, forLocale: .English(.UnitedStates))
-        XCTAssertEqual(formatted, "Ƀ0.002007")
+        XCTAssertEqual(formatted, "Ƀ\u{00A0}0.002007")
     }
 
     func test__btc_formatted_with_style_for_locale() {
         XCTAssertEqual(btc.currencyCode, "BTC")
         let formatted = btc.formatted(withStyle: .currency, forLocale: .Spanish(.Mexico))
-        XCTAssertEqual(formatted, "Ƀ0.002007")
+        XCTAssertEqual(formatted, "Ƀ\u{00A0}0.002007")
     }
 
     func test__cad_description() {
@@ -367,21 +367,13 @@ class MoneyFormattingTests: MoneyTestCase {
     }
 }
 
-class MoneyValueCodingTests: XCTestCase {
+class MoneyCodableTests: XCTestCase {
 
-    var money: Money!
-
-    func archiveEncodedMoney() -> Data {
-        return NSKeyedArchiver.archivedData(withRootObject: money.encoded)
-    }
-
-    func unarchive(_ archive: Data) -> Money? {
-        return Money.decode(NSKeyedUnarchiver.unarchiveObject(with: archive) as AnyObject?)
-    }
-
-    func test__money_encodes() {
-        money = 10
-        XCTAssertEqual(unarchive(archiveEncodedMoney()), money)
+    func test__money_encodes_and_decodes() throws {
+        let money: Money = 10
+        let data = try JSONEncoder().encode(money)
+        let decoded = try JSONDecoder().decode(Money.self, from: data)
+        XCTAssertEqual(decoded, money)
     }
 }
 

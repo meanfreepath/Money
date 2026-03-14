@@ -25,7 +25,6 @@
 // SOFTWARE.
 
 import XCTest
-import ValueCoding
 @testable import Money
 
 class PlainDecimalTestCase: XCTestCase {
@@ -103,19 +102,13 @@ class DecimalNumberConversionTests: PlainDecimalTestCase {
     }
 }
 
-class DecimalValueCodingTests: PlainDecimalTestCase {
+class DecimalCodableTests: PlainDecimalTestCase {
 
-    func archiveEncodedDecimal() -> Data {
-        return NSKeyedArchiver.archivedData(withRootObject: decimal.encoded)
-    }
-
-    func unarchive(_ archive: Data) -> PlainDecimal? {
-        return PlainDecimal.decode(NSKeyedUnarchiver.unarchiveObject(with: archive) as AnyObject?)
-    }
-
-    func test__decimal_encodes() {
+    func test__decimal_encodes_and_decodes() throws {
         decimal = 10
-        XCTAssertEqual(unarchive(archiveEncodedDecimal()), decimal)
+        let data = try JSONEncoder().encode(decimal)
+        let decoded = try JSONDecoder().decode(PlainDecimal.self, from: data)
+        XCTAssertEqual(decoded, decimal)
     }
 }
 

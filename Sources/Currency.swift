@@ -258,6 +258,6 @@ public struct Currency {
      the device's current currency, using `NSLocale.currentLocale()`.
      */
     public final class Local: Currency.Base, ISOCurrencyType {
-        public static var sharedInstance = Local(locale: NSLocale.current as NSLocale)
+        public static let sharedInstance = Local(locale: NSLocale.current as NSLocale)
     }
 }
